@@ -21,6 +21,28 @@ class Fruit {
         img.paintIcon(null, g, this.x, this.y);
     }
 
+    public void setNewLocation(Snake snake) {
+        int new_x;
+        int new_y;
+        boolean overlapping;
+
+        do {
+            new_x = (int)Math.floor(Math.random() * Main.COLUMN) * Main.CELL_SIZE;
+            new_y = (int)Math.floor(Math.random() * Main.ROW) * Main.CELL_SIZE;
+            overlapping = checkOverlapping(snake, new_x, new_y);
+        } while (overlapping);
+        this.x = new_x;
+        this.y = new_y;
+    }
+
+    private boolean checkOverlapping(Snake snake, int x, int y) {
+        for (int i = 0; i < snake.snakeBody.size(); i++) {
+            if (snake.snakeBody.get(i).x ==x && snake.snakeBody.get(i).y ==y) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 class Node {
@@ -34,9 +56,6 @@ class Node {
 }
 
 class Snake {
-    public ArrayList<Node> getSnakeBody() {
-        return snakeBody;
-    }
 
     ArrayList<Node> snakeBody = new ArrayList<>();
     public Snake() {
@@ -53,6 +72,18 @@ class Snake {
             } else {
                 g.setColor(Color.GREEN);
             }
+
+            //處理超出視窗的狀況
+            if (n.x >= Main.WIDTH) {
+                n.x = 0;
+            } else if (n.x < 0) {
+                n.x = Main.WIDTH - Main.CELL_SIZE;
+            } else if (n.y >= Main.HEIGHT) {
+                n.y = 0;
+            } else if (n.y < 0) {
+                n.y = Main.HEIGHT - Main.CELL_SIZE;
+            }
+
             g.fillOval(n.x, n.y, Main.CELL_SIZE, Main.CELL_SIZE);
         }
     }
@@ -69,18 +100,26 @@ public class Main extends JPanel implements KeyListener {
     Fruit fruit;
     Timer timer;
     String direction;
+    int speed;
+    boolean allowKeyInput;
+
+    int score;
+    int highestScore;
 
     public Main() {
         snake = new Snake();
         fruit = new Fruit();
         timer = new Timer();
+        speed = 100;
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 repaint();
             }
-        }, 0, 100);
+        }, 0, speed);
         direction = "RIGHT";
+        score = 0;
+        allowKeyInput = true;
         addKeyListener(this);
     }
 
@@ -91,8 +130,9 @@ public class Main extends JPanel implements KeyListener {
         fruit.drawFruit(g);
         snake.drawSnake(g);
 
-        int snakeX = snake.getSnakeBody().get(0).x;
-        int snakeY = snake.getSnakeBody().get(0).y;
+        Node snakeHead = snake.snakeBody.get(0);
+        int snakeX = snakeHead.x;
+        int snakeY = snakeHead.y;
 
         if (direction.equals("RIGHT")) {
             snakeX += CELL_SIZE;
@@ -106,9 +146,18 @@ public class Main extends JPanel implements KeyListener {
 
         Node newHead = new Node(snakeX, snakeY);
 
-        snake.getSnakeBody().add(0, newHead);
-        snake.getSnakeBody().remove(snake.getSnakeBody().size() - 1);
+        if (snakeHead.x == fruit.x && snakeHead.y == fruit.y) {
+            //處理吃到水果的狀況
+            score++;
+            fruit.setNewLocation(snake);
 
+        } else {
+            snake.snakeBody.remove(snake.snakeBody.size() - 1);
+        }
+        snake.snakeBody.add(0, newHead);
+
+
+        allowKeyInput = true;
         requestFocusInWindow();
     }
 
@@ -134,14 +183,17 @@ public class Main extends JPanel implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == 37 && !direction.equals("RIGHT")) {
-            direction = "LEFT";
-        } else if (e.getKeyCode() == 38 && !direction.equals("DOWN")) {
-            direction = "UP";
-        } else if (e.getKeyCode() == 39 && !direction.equals("LEFT")) {
-            direction = "RIGHT";
-        } else if (e.getKeyCode() == 40 && !direction.equals("UP")) {
-            direction = "DOWN";
+        if (allowKeyInput) {
+            if (e.getKeyCode() == 37 && !direction.equals("RIGHT")) {
+                direction = "LEFT";
+            } else if (e.getKeyCode() == 38 && !direction.equals("DOWN")) {
+                direction = "UP";
+            } else if (e.getKeyCode() == 39 && !direction.equals("LEFT")) {
+                direction = "RIGHT";
+            } else if (e.getKeyCode() == 40 && !direction.equals("UP")) {
+                direction = "DOWN";
+            }
+            allowKeyInput = false;
         }
     }
 
