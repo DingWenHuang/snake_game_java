@@ -1,3 +1,5 @@
+package com.wenhuang;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -234,7 +236,7 @@ public class Main extends JPanel implements KeyListener {
     }
 
     public static void main(String[] args) {
-        JFrame window = new JFrame("Snake Game");
+        JFrame window = new JFrame("com.wenhuang.Snake Game");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setContentPane(new Main());
         window.pack();
