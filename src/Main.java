@@ -111,6 +111,9 @@ public class Main extends JPanel implements KeyListener {
     int score;
     int highestScore;
 
+    String desktop = System.getProperty("user.home") + "/Desktop/";
+    String filePath = desktop + "score.txt";
+
     public Main() {
         readHighestScore();
         resetGame();
@@ -134,7 +137,7 @@ public class Main extends JPanel implements KeyListener {
     }
 
     private void readHighestScore() {
-        File file = new File("score.txt");
+        File file = new File(filePath);
         try {
             Scanner scanner = new Scanner(file);
             highestScore = scanner.nextInt();
@@ -151,7 +154,7 @@ public class Main extends JPanel implements KeyListener {
     }
 
     private void writeScore(int score) {
-        File file = new File("score.txt");
+        File file = new File(filePath);
         try {
             FileWriter writer = new FileWriter(file);
             if (score > highestScore) {
