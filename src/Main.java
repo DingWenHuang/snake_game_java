@@ -2,7 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -107,6 +112,12 @@ public class Main extends JPanel implements KeyListener {
     int highestScore;
 
     public Main() {
+        readHighestScore();
+        resetGame();
+        addKeyListener(this);
+    }
+
+    private void resetGame() {
         snake = new Snake();
         fruit = new Fruit();
         timer = new Timer();
@@ -120,17 +131,70 @@ public class Main extends JPanel implements KeyListener {
         direction = "RIGHT";
         score = 0;
         allowKeyInput = true;
-        addKeyListener(this);
+    }
+
+    private void readHighestScore() {
+        File file = new File("score.txt");
+        try {
+            Scanner scanner = new Scanner(file);
+            highestScore = scanner.nextInt();
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            try {
+                FileWriter writer = new FileWriter(file);
+                writer.write("" + 0);
+                writer.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+    }
+
+    private void writeScore(int score) {
+        File file = new File("score.txt");
+        try {
+            FileWriter writer = new FileWriter(file);
+            if (score > highestScore) {
+                highestScore = score;
+                writer.write("" + score);
+            } else {
+                writer.write("" + highestScore);
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void paintComponent(Graphics g) {
+        Node snakeHead = snake.snakeBody.get(0);
+
+        //處理咬到自己的狀況
+        for (int i = 1; i < snake.snakeBody.size(); i++) {
+            if (snakeHead.x == snake.snakeBody.get(i).x && snakeHead.y == snake.snakeBody.get(i).y) {
+                timer.cancel();
+                timer.purge();
+                writeScore(score);
+                int response = JOptionPane.showOptionDialog(null, "Game over your score is " + score + " and highest score is " + highestScore + " Try again ?", "Game Over", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE,  null, null, JOptionPane.YES_OPTION);
+                switch (response) {
+                    case JOptionPane.CLOSED_OPTION, JOptionPane.NO_OPTION:
+                        System.exit(0);
+                        return;
+                    case JOptionPane.YES_OPTION:
+                        resetGame();
+                        return;
+                }
+            }
+        }
+
+
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, WIDTH, HEIGHT);
         fruit.drawFruit(g);
         snake.drawSnake(g);
 
-        Node snakeHead = snake.snakeBody.get(0);
+
         int snakeX = snakeHead.x;
         int snakeY = snakeHead.y;
 
